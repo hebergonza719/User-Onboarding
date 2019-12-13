@@ -19,7 +19,23 @@ const UserForm = ({ values, errors, touched, status }) => {
   console.log("errors", errors);
   console.log("touched", touched);
 
-  const [users, setUsers] = useState();
+  // Add empty array as initial value []
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    // if status has content (an obj from API response) then render function setUsers
+    // use a spread to create a new array with all of users 
+    // previous values + the new obj from the API stored in status
+    // could be setUsers([...users, status]) but that fires a warning 
+    // that we should watch users. We don't need to watch for users 
+    // changes (this is the only place it could change)
+    // change to users => [...users, status] to read in the current 
+    // value of users, and then use it to create a new array
+
+    // if status has content, then render function setUsers()
+    status && setUsers(users => [...users, status]);
+
+  }, [status]) // listens for any changes in status, status comes from handleSubmit
 
   return (
     <div>
@@ -74,6 +90,19 @@ const UserForm = ({ values, errors, touched, status }) => {
         </label>
         <button type="submit">Submit!</button>
       </Form>
+      {/* render what we have already posted */}
+      {users.map(user => {
+        return (
+          // <ul key="user.id">
+          //   <li>Name: {user.name}</li>
+          //   <li>Email: {user.email}</li>
+          // </ul>
+          <div key="user.id">
+            <p>Name: {user.name}</p>
+            <p>Email: {user.email}</p>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -114,10 +143,12 @@ const FormikUserForm = withFormik({
 
     axios
       .post("https://reqres.in/api/users", values)
-      .then(response => {
-        console.log("this is the response: ", response);
+      .then(res => {
+        console.log("this is the response: ", res);
+        
         // sends a status update through props in UserForm with value as response.data content
-        // setStatus(response.data);
+        // this comes from the formikBag
+        setStatus(res.data);
 
         //clears form inputs, from FormikBag
         resetForm();
